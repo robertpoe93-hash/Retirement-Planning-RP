@@ -1,0 +1,1347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Robert's Financial Planning – Retirement Planner</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Chart.js for charts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.5;
+      color: #111827;
+      background: #0f172a;
+    }
+    body {
+      margin: 0;
+      padding: 1.5rem;
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+      box-sizing: border-box;
+      background: radial-gradient(circle at top, #1d4ed8 0, #0f172a 55%, #020617 100%);
+    }
+
+    /* Simple landing overlay */
+    .landing-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      background:
+        radial-gradient(circle at 0% 0%, rgba(191,219,254,.08), transparent 55%),
+        radial-gradient(circle at 100% 0%, rgba(59,130,246,.12), transparent 60%),
+        radial-gradient(circle at 50% 100%, rgba(30,64,175,.5), #020617 75%);
+      color: #e5e7eb;
+      box-sizing: border-box;
+    }
+    .landing-card {
+      max-width: 720px;
+      width: 100%;
+      padding: 2rem 2.2rem 2.3rem;
+      border-radius: 1.5rem;
+      background: radial-gradient(circle at top left, rgba(191,219,254,.18), rgba(15,23,42,.98));
+      box-shadow: 0 24px 80px rgba(15,23,42,.8), 0 0 0 1px rgba(148,163,184,.35);
+      animation: float 16s ease-in-out infinite;
+    }
+    .landing-title {
+      margin: 0 0 .25rem;
+      font-size: clamp(1.8rem, 3vw, 2.2rem);
+      letter-spacing: -0.05em;
+      color: #e5e7eb;
+    }
+    .landing-sub {
+      margin: 0;
+      font-size: .9rem;
+      color: #cbd5f5;
+    }
+    .landing-pill-row {
+      margin-top: .75rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: .4rem;
+      font-size: .78rem;
+    }
+    .landing-pill-row span {
+      border-radius: 999px;
+      padding: .12rem .7rem;
+      background: rgba(15,23,42,.7);
+      border: 1px solid rgba(191,219,254,.45);
+      color: #dbeafe;
+    }
+    .landing-body {
+      margin-top: 1.1rem;
+      font-size: .9rem;
+    }
+    .landing-body ul {
+      margin: .35rem 0 0;
+      padding-left: 1.1rem;
+      color: #d1d5db;
+    }
+    .landing-cta {
+      margin-top: 1.1rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: .6rem;
+      align-items: center;
+    }
+    .landing-cta button {
+      border: none;
+      border-radius: 999px;
+      padding: .6rem 1.5rem;
+      font-size: .9rem;
+      font-weight: 600;
+      cursor: pointer;
+      background: radial-gradient(circle at top left, #60a5fa, #2563eb);
+      color: #f9fafb;
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+      box-shadow: 0 14px 32px rgba(37,99,235,.6), 0 0 0 1px rgba(191,219,254,.4);
+    }
+    .landing-cta small {
+      font-size: .78rem;
+      color: #cbd5f5;
+    }
+    @keyframes float {
+      0%,100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+    }
+
+    /* Main app */
+    .app {
+      max-width: 1100px;
+      width: 100%;
+      background: linear-gradient(135deg, #f9fafb 0%, #f3f4ff 40%, #f9fafb 100%);
+      border-radius: 1.25rem;
+      box-shadow: 0 18px 45px rgba(15,23,42,.6), 0 0 0 1px rgba(148,163,184,.4);
+      padding: 1.4rem 1.6rem 1.8rem;
+      box-sizing: border-box;
+      position: relative;
+      overflow: hidden;
+    }
+    h1 {
+      margin-top: 0;
+      font-size: 1.6rem;
+      letter-spacing: -0.04em;
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+    }
+    h1 span.badge {
+      font-size: .7rem;
+      text-transform: uppercase;
+      letter-spacing: .14em;
+      padding: .1rem .5rem;
+      border-radius: 999px;
+      background: rgba(59,130,246,.08);
+      color: #1d4ed8;
+      border: 1px solid rgba(129,140,248,.4);
+    }
+    p.description {
+      margin-top: .15rem;
+      color: #4b5563;
+      font-size: .88rem;
+      max-width: 52rem;
+    }
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .35rem;
+      margin-top: .4rem;
+      font-size: .75rem;
+      color: #6b7280;
+    }
+    .pill-row span {
+      border-radius: 999px;
+      padding: .08rem .55rem;
+      background: rgba(15,23,42,.03);
+      border: 1px solid rgba(148,163,184,.3);
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .4rem;
+      margin-top: .9rem;
+      padding: .25rem;
+      border-radius: 999px;
+      background: rgba(255,255,255,.9);
+      border: 1px solid rgba(209,213,219,.9);
+    }
+    .tab-button {
+      border-radius: 999px;
+      padding: .35rem .9rem;
+      font-size: .82rem;
+      border: 1px solid transparent;
+      background: transparent;
+      cursor: pointer;
+      color: #4b5563;
+      display: flex;
+      align-items: center;
+      gap: .3rem;
+    }
+    .tab-button span.dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: #d1d5db;
+    }
+    .tab-button.active {
+      background: #111827;
+      color: #f9fafb;
+      border-color: #111827;
+      box-shadow: 0 8px 18px rgba(15,23,42,.35);
+    }
+    .tab-button.active span.dot {
+      background: #a5b4fc;
+    }
+    .tab-panels { margin-top: .9rem; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: .9rem 1rem;
+      margin-top: .75rem;
+    }
+    .group {
+      margin-top: .8rem;
+      padding: .8rem .9rem .9rem;
+      border-radius: .9rem;
+      background: rgba(255,255,255,.96);
+      border: 1px solid rgba(209,213,219,.9);
+      box-shadow: 0 6px 18px rgba(15,23,42,.06);
+    }
+    .group-title {
+      margin-top: .05rem;
+      margin-bottom: .1rem;
+      font-size: .88rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      color: #6b7280;
+      display: flex;
+      align-items: center;
+      gap: .4rem;
+    }
+    .group-title span.dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: #4f46e5;
+      box-shadow: 0 0 0 4px rgba(129,140,248,.3);
+    }
+    .group-subtitle {
+      font-size: .78rem;
+      color: #9ca3af;
+      margin-bottom: .2rem;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: .12rem;
+      font-size: .88rem;
+    }
+    .field label {
+      font-weight: 500;
+      color: #374151;
+    }
+    .field small {
+      color: #9ca3af;
+      font-size: .74rem;
+    }
+    .field input,
+    .field textarea {
+      border-radius: .6rem;
+      border: 1px solid #d1d5db;
+      padding: .35rem .55rem;
+      font-size: .86rem;
+      outline: none;
+      background: #f9fafb;
+      font-family: inherit;
+    }
+    .field textarea { resize: vertical; min-height: 60px; }
+    .field input:focus,
+    .field textarea:focus {
+      border-color: #4f46e5;
+      box-shadow: 0 0 0 1px rgba(79,70,229,.3);
+      background: #ffffff;
+    }
+    .field input[type="number"] { text-align: right; }
+
+    .checkbox-inline {
+      display: flex;
+      align-items: center;
+      gap: .4rem;
+      font-size: .88rem;
+    }
+    .checkbox-inline input { width: auto; margin: 0; }
+
+    .actions {
+      margin-top: .9rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: .55rem;
+      align-items: center;
+      padding: .45rem .65rem;
+      border-radius: 999px;
+      background: rgba(255,255,255,.95);
+      border: 1px solid rgba(209,213,219,.9);
+      box-shadow: 0 6px 18px rgba(15,23,42,.06);
+      font-size: .8rem;
+    }
+    .actions-label {
+      font-weight: 500;
+      color: #6b7280;
+    }
+    button.primary {
+      border: none;
+      border-radius: 999px;
+      padding: .45rem 1.2rem;
+      font-size: .86rem;
+      font-weight: 600;
+      cursor: pointer;
+      background: radial-gradient(circle at top left, #4f46e5, #2563eb);
+      color: #ffffff;
+      display: inline-flex;
+      align-items: center;
+      gap: .35rem;
+      box-shadow: 0 10px 22px rgba(37,99,235,.35);
+    }
+    button.secondary {
+      border-radius: 999px;
+      border: 1px solid #d1d5db;
+      padding: .4rem 1rem;
+      font-size: .82rem;
+      cursor: pointer;
+      background: #ffffff;
+      color: #374151;
+    }
+
+    .validation {
+      margin-top: .6rem;
+      padding: .5rem .7rem;
+      border-radius: .6rem;
+      background: #fffbeb;
+      border: 1px solid #fbbf24;
+      font-size: .8rem;
+      color: #92400e;
+    }
+    .validation ul { margin: .25rem 0 0; padding-left: 1.2rem; }
+
+    .summary-block {
+      margin-top: 1rem;
+      padding: .9rem .95rem 1rem;
+      border-radius: .9rem;
+      background: rgba(255,255,255,.96);
+      border: 1px solid #e5e7eb;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: .7rem 1.1rem;
+      font-size: .88rem;
+    }
+    .summary-block h2 {
+      grid-column: 1 / -1;
+      margin: 0 0 .15rem;
+      font-size: .98rem;
+    }
+    .summary-item { display: flex; flex-direction: column; gap: .08rem; }
+    .summary-label {
+      color: #6b7280;
+      font-size: .76rem;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      font-weight: 600;
+    }
+    .summary-value { font-size: .96rem; font-weight: 600; }
+    .summary-pill {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: .12rem .65rem;
+      font-size: .78rem;
+      font-weight: 500;
+    }
+    .pill-ok { background: rgba(16,185,129,.12); color: #047857; }
+    .pill-risk { background: rgba(239,68,68,.12); color: #b91c1c; }
+
+    .scenario-text {
+      margin-top: 1rem;
+      padding: .8rem .9rem;
+      border-radius: .9rem;
+      background: rgba(255,255,255,.96);
+      border: 1px dashed #d1d5db;
+      font-size: .88rem;
+    }
+
+    .comparison {
+      margin-top: 1.1rem;
+      padding: .9rem .95rem 1rem;
+      border-radius: .9rem;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      font-size: .88rem;
+    }
+    .comparison-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: .7rem 1.1rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+      font-size: .8rem;
+      border-radius: .75rem;
+      overflow: hidden;
+      background: rgba(255,255,255,.95);
+      box-shadow: 0 8px 20px rgba(15,23,42,.08);
+    }
+    thead { background: linear-gradient(90deg, #e5e7eb, #e0e7ff); }
+    th, td {
+      padding: .35rem .45rem;
+      border-bottom: 1px solid #e5e7eb;
+      text-align: right;
+    }
+    th:first-child, td:first-child { text-align: left; }
+    th { white-space: normal; }
+    td { white-space: nowrap; }
+    tbody tr:nth-child(even) { background: #f9fafb; }
+    .depleted-row { background: #fef2f2 !important; }
+
+    #chartContainer {
+      margin-top: 1rem;
+      padding: .8rem .9rem 1rem;
+      border-radius: .9rem;
+      background: rgba(255,255,255,.96);
+      border: 1px solid #e5e7eb;
+      box-shadow: 0 6px 18px rgba(15,23,42,.06);
+    }
+    #chartContainer canvas {
+      width: 100%;
+      max-width: 100%;
+      height: 260px;
+      display: block;
+    }
+
+    .note {
+      margin-top: .8rem;
+      font-size: .75rem;
+      color: #6b7280;
+    }
+
+    @media (max-width: 720px) {
+      body { padding: .75rem; }
+      .landing-card { padding: 1.7rem 1.4rem 1.9rem; }
+      .app { padding: 1rem 1rem 1.4rem; }
+      table { display: block; overflow-x: auto; }
+    }
+
+    @media print {
+      body { background: #ffffff; padding: 0; }
+      .landing-overlay { display: none !important; }
+      .app {
+        box-shadow: none;
+        max-width: 8.5in;
+        padding: .5in;
+        background: #ffffff;
+      }
+      .tabs, .actions, #chartContainer, #tableContainer, .validation { display: none !important; }
+      .tab-panel { display: none !important; }
+      #tab-results { display: block !important; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Landing -->
+  <div class="landing-overlay" id="landingOverlay">
+    <div class="landing-card">
+      <h2 class="landing-title">Robert's Financial Planning</h2>
+      <p class="landing-sub">Retirement What-If Planner</p>
+      <div class="landing-pill-row">
+        <span>Dual-spouse & survivor modeling</span>
+        <span>Scenario A/B comparisons</span>
+        <span>Stress test & tax layer</span>
+        <span>Printable summary & CSV export</span>
+      </div>
+      <div class="landing-body">
+        <p>
+          Test different retirement ages, spending paths, and market assumptions quickly — then save or print
+          a clean, client-ready summary.
+        </p>
+        <ul>
+          <li>Set per-spouse ages, retirement dates, and plan-through ages.</li>
+          <li>Specify Social Security, pensions, and their start ages.</li>
+          <li>Use different return assumptions before and after retirement.</li>
+        </ul>
+        <div class="landing-cta">
+          <button type="button" onclick="startPlanner()">
+            <span>▶</span> Start planning
+          </button>
+          <small>All calculations run locally in your browser — nothing is uploaded.</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main app -->
+  <div class="app">
+    <h1>
+      Retirement What-If Planner
+      <span class="badge">dual spouse • survivor • stress test</span>
+    </h1>
+    <p class="description">
+      Use the tabs below to enter inputs in a structured way and review results. All amounts are in
+      <strong>today's dollars</strong>. This is a simplified projection for planning only, not financial advice.
+    </p>
+    <div class="pill-row">
+      <span>Client & household overview</span>
+      <span>Per-spouse ages & income</span>
+      <span>Scenario A/B with survivor view</span>
+      <span>Printable summary & CSV export</span>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab-button active" data-tab="intro"><span class="dot"></span>Intro & Client</button>
+      <button class="tab-button" data-tab="ages"><span class="dot"></span>Ages & Timing</button>
+      <button class="tab-button" data-tab="invest"><span class="dot"></span>Investments & Tax</button>
+      <button class="tab-button" data-tab="income"><span class="dot"></span>Income & Spending</button>
+      <button class="tab-button" data-tab="results"><span class="dot"></span>Results</button>
+    </div>
+
+    <div class="tab-panels">
+      <!-- Intro -->
+      <div class="tab-panel active" id="tab-intro">
+        <div class="group">
+          <div class="group-title"><span class="dot"></span>Client & Scenario Details</div>
+          <div class="group-subtitle">These fields appear on the printed summary for documentation.</div>
+          <div class="grid">
+            <div class="field">
+              <label>Client / Household Name</label>
+              <input type="text" id="clientName" placeholder="e.g., John & Jane Smith" />
+            </div>
+            <div class="field">
+              <label>Prepared by</label>
+              <input type="text" id="preparedBy" placeholder="e.g., Robert Poe" />
+            </div>
+            <div class="field">
+              <label>Scenario Label</label>
+              <input type="text" id="scenarioLabel" placeholder="e.g., Baseline plan" />
+            </div>
+            <div class="field">
+              <label>Date of Scenario</label>
+              <input type="date" id="scenarioDate" />
+            </div>
+          </div>
+        </div>
+
+        <div class="group">
+          <div class="group-title"><span class="dot"></span>Notes & Assumptions</div>
+          <div class="group-subtitle">Optional free-text section to capture key assumptions.</div>
+          <div class="field">
+            <label>Assumptions / Notes</label>
+            <textarea id="assumptions" placeholder="E.g., downsize at 70; large purchase at 75; conservative spending in later years."></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ages & Timing -->
+      <div class="tab-panel" id="tab-ages">
+        <div class="group">
+          <div class="group-title"><span class="dot"></span>Primary Client – Ages</div>
+          <div class="group-subtitle">You can set current age equal to retirement age if already retired.</div>
+          <div class="grid">
+            <div class="field checkbox-inline">
+              <input type="checkbox" id="alreadyRetired1" />
+              <label for="alreadyRetired1">Primary is already retired (sets current age = retirement)</label>
+            </div>
+            <div class="field">
+              <label>Current age (primary)</label>
+              <input type="number" step="0.1" id="ageCurrent1" value="55" />
+            </div>
+            <div class="field">
+              <label>Retirement age (primary)</label>
+              <input type="number" step="0.1" id="ageRetire1" value="65" />
+            </div>
+            <div class="field">
+              <label>Plan through age (primary)</label>
+              <input type="number" step="0.1" id="ageEnd1" value="95" />
+            </div>
+          </div>
+        </div>
+
+        <div class="group">
+          <div class="group-title"><span class="dot"></span>Spouse – Ages (optional)</div>
+          <div class="group-subtitle">Check “Include spouse” to model a second person and survivor effects.</div>
+          <div class="grid">
+            <div class="field checkbox-inline">
+              <input type="checkbox" id="includeSpouse" />
+              <label for="includeSpouse">Include spouse in this plan</label>
+            </div>
+            <div class="field">
+              <label>Current age (spouse)</label>
+              <input type="number" step="0.1" id="ageCurrent2" value="53" />
+            </div>
+            <div class="field">
+              <label>Retirement age (spouse)</label>
+              <input type="number" step="0.1" id="ageRetire2" value="65" />
+            </div>
+            <div class="field">
+              <label>Plan through age (spouse)</label>
+              <input type="number" step="0.1" id="ageEnd2" value="95" />
+            </div>
+            <div class="field checkbox-inline">
+              <input type="checkbox" id="alreadyRetired2" />
+              <label for="alreadyRetired2">Spouse is already retired (sets current age = retirement)</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="group">
+          <div class="group-title"><span class="dot"></span>Survivor Options</div>
+          <div class="group-subtitle">Allows spending to adjust after the first death.</div>
+          <div class="grid">
+            <div class="field">
+              <label>Widow(er) spending as % of joint spending</label>
+              <input type="number" id="widowPercent" value="80" />
+              <small>Example: 80 means survivor spends 80% of joint spending after the first spouse dies.</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Investments & Tax -->
+      <div class="tab-panel" id="tab-invest">
+        <div class="group">
+          <div class="group-title"><span class="dot"></span>Portfolio & Contributions</div>
+          <div class="group-subtitle">Household portfolio and per-spouse contributions until they retire.</div>
+          <div class="grid">
+            <div class="field">
+              <label>Current portfolio balance (household)</label>
+              <input type="number" id="startBalance" value="1500000" />
+            </div>
+            <div class="field">
+              <label>Annual contribution – primary (until retirement)</label>
+              <input type="number" id="contrib1" value="25000" />
+            </div>
+            <div class="field">
+              <label>Annual contribution – spouse (until retirement)</label>
+              <input type="number" id="contrib2" value="25000" />
+            </div>
+          </div>
+        </div>
+
+        <div class="group">
+          <div class="group-title"><span class="dot"></span>Return, Inflation & Tax</div>
+          <div class="group-subtitle">Returns entered as nominal; model converts to real after inflation.</div>
+          <div class="grid">
+            <div class="field">
+              <label>Long-term inflation %</label>
+              <input type="number" step="0.1" id="inflationRate" value="2.5" />
+              <small>Used to convert nominal returns into real (after inflation) returns.</small>
+            </div>
+            <div class="field">
+              <label>Nominal return % before retirement</label>
+              <input type="number" step="0.1" id="nomReturnPre" value="6.0" />
+            </div>
+            <div class="field">
+              <label>Nominal return % in retirement</label>
+              <input type="number" step="0.1" id="nomReturnPost" value="5.0" />
+            </div>
+            <div class="field">
+              <label>Stress-test nominal return % (all years)</label>
+              <input type="number" step="0.1" id="stressReturnAll" value="3.0" />
+              <small>Used when stress-test toggle is on for a scenario.</small>
+            </div>
+            <div class="field">
+              <label>Approximate effective tax rate %</label>
+              <input type="number" step="0.1" id="taxRate" value="15" />
+              <small>Used to estimate gross withdrawals needed to fund after-tax spending.</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Income & Spending -->
+      <div class="tab-panel" id="tab-income">
+        <div class="group">
+          <div class="group-title"><span class="dot"></span>Guaranteed Income</div>
+          <div class="group-subtitle">Social Security and pensions begin at their specified start ages and end at each plan-through age.</div>
+          <div class="grid">
+            <div class="field">
+              <label>Annual Social Security – primary</label>
+              <input type="number" id="ss1" value="40000" />
+            </div>
+            <div class="field">
+              <label>SS start age – primary</label>
+              <input type="number" step="0.1" id="ssStartAge1" value="67" />
+            </div>
+            <div class="field">
+              <label>Annual pension – primary</label>
+              <input type="number" id="pension1" value="0" />
+            </div>
+            <div class="field">
+              <label>Pension start age – primary</label>
+              <input type="number" step="0.1" id="pensionStartAge1" value="65" />
+            </div>
+            <div class="field">
+              <label>Annual Social Security – spouse</label>
+              <input type="number" id="ss2" value="30000" />
+            </div>
+            <div class="field">
+              <label>SS start age – spouse</label>
+              <input type="number" step="0.1" id="ssStartAge2" value="67" />
+            </div>
+            <div class="field">
+              <label>Annual pension – spouse</label>
+              <input type="number" id="pension2" value="0" />
+            </div>
+            <div class="field">
+              <label>Pension start age – spouse</label>
+              <input type="number" step="0.1" id="pensionStartAge2" value="65" />
+            </div>
+          </div>
+        </div>
+
+        <div class="group">
+          <div class="group-title"><span class="dot"></span>Retirement Spending</div>
+          <div class="group-subtitle">Simple spending pattern with an optional step change at a later age.</div>
+          <div class="grid">
+            <div class="field">
+              <label>Base annual spending in retirement (joint)</label>
+              <input type="number" id="spendBase" value="200000" />
+            </div>
+            <div class="field">
+              <label>Optional spending change age</label>
+              <input type="number" step="0.1" id="spendChangeAge" value="80" />
+              <small>Leave blank if no change.</small>
+            </div>
+            <div class="field">
+              <label>Spending at/after change age</label>
+              <input type="number" id="spendLater" value="160000" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Results -->
+      <div class="tab-panel" id="tab-results">
+        <div id="validation" class="validation" style="display:none;"></div>
+
+        <div class="actions">
+          <span class="actions-label">Run scenarios:</span>
+          <button class="primary" onclick="runScenario('A')">Run Scenario A</button>
+          <button class="primary" onclick="runScenario('B')">Run Scenario B</button>
+          <label class="checkbox-inline">
+            <input type="checkbox" id="stressToggle" />
+            Use stress-test return for this run
+          </label>
+          <button class="secondary" onclick="resetToDefaults()">Reset to defaults</button>
+          <button class="secondary" onclick="restoreLastInputs()">Restore prior inputs</button>
+          <span style="font-size:.75rem;color:#6b7280;">Tip: Run A as baseline, B as “what if” (e.g., later retirement or higher spending).</span>
+        </div>
+
+        <div class="summary-block" id="summaryBlock" style="display:none;">
+          <h2>Scenario Summary</h2>
+          <div class="summary-item">
+            <div class="summary-label">Scenario</div>
+            <div class="summary-value" id="summaryScenario"></div>
+          </div>
+          <div class="summary-item">
+            <div class="summary-label">Ending balance</div>
+            <div class="summary-value" id="summaryEndBalance"></div>
+          </div>
+          <div class="summary-item">
+            <div class="summary-label">Depletion status</div>
+            <div class="summary-value"><span class="summary-pill" id="summaryDepletion"></span></div>
+          </div>
+          <div class="summary-item">
+            <div class="summary-label">Retirement ages</div>
+            <div class="summary-value" id="summaryRetireAges"></div>
+          </div>
+        </div>
+
+        <div class="scenario-text" id="scenarioText" style="display:none;"></div>
+
+        <div class="comparison" id="comparisonBlock" style="display:none;">
+          <h2>Scenario A vs Scenario B</h2>
+          <div class="comparison-grid">
+            <div>
+              <strong>Scenario A</strong>
+              <div id="compareA"></div>
+            </div>
+            <div>
+              <strong>Scenario B</strong>
+              <div id="compareB"></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="chartContainer" style="display:none;">
+          <h3>Portfolio Balance Over Time</h3>
+          <canvas id="chartCanvas"></canvas>
+        </div>
+
+        <div id="tableContainer"></div>
+
+        <div class="actions" style="margin-top:1rem;">
+          <span class="actions-label">Exports:</span>
+          <button class="secondary" onclick="printResults()">Print summary view</button>
+          <button class="secondary" onclick="downloadCSV()">Download plan CSV</button>
+        </div>
+
+        <div class="note">
+          Disclaimer: This tool is a simplified projection engine and does not account for all tax rules, investment
+          risks, or planning nuances. It is for illustration only and is not individualized financial, legal, or tax advice.
+          Planning tool structure created by <strong>Robert Poe</strong>.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function startPlanner() {
+      document.getElementById('landingOverlay').style.display = 'none';
+    }
+
+    // Snapshot logic for defaults and prior values
+    let defaultSnapshot = null;
+    let lastSnapshot = null;
+
+    function snapshotInputs() {
+      const elements = document.querySelectorAll('input, textarea');
+      const snap = {};
+      elements.forEach(el => {
+        if (!el.id) return;
+        if (el.type === 'checkbox') {
+          snap[el.id] = { type: 'checkbox', value: el.checked };
+        } else {
+          snap[el.id] = { type: 'value', value: el.value };
+        }
+      });
+      return snap;
+    }
+
+    function applySnapshot(snap) {
+      if (!snap) return;
+      Object.keys(snap).forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const item = snap[id];
+        if (item.type === 'checkbox') {
+          el.checked = item.value;
+        } else {
+          el.value = item.value;
+        }
+      });
+    }
+
+    function resetToDefaults() {
+      if (!defaultSnapshot) return;
+      applySnapshot(defaultSnapshot);
+    }
+
+    function restoreLastInputs() {
+      if (!lastSnapshot) {
+        alert('No prior scenario inputs to restore yet.');
+        return;
+      }
+      applySnapshot(lastSnapshot);
+    }
+
+    window.addEventListener('load', () => {
+      defaultSnapshot = snapshotInputs();
+    });
+
+    // Tabs
+    document.querySelectorAll('.tab-button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tab = btn.dataset.tab;
+        document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('tab-' + tab).classList.add('active');
+      });
+    });
+
+    // Already retired behavior
+    document.getElementById('alreadyRetired1').addEventListener('change', e => {
+      if (e.target.checked) {
+        const val = parseFloat(document.getElementById('ageCurrent1').value || 0);
+        document.getElementById('ageRetire1').value = val;
+      }
+    });
+    document.getElementById('alreadyRetired2').addEventListener('change', e => {
+      if (e.target.checked) {
+        const val = parseFloat(document.getElementById('ageCurrent2').value || 0);
+        document.getElementById('ageRetire2').value = val;
+      }
+    });
+
+    let scenarioAResult = null;
+    let scenarioBResult = null;
+    let chartInstance = null;
+    let lastRunScenarioId = null;
+
+    function runScenario(label) {
+      const stress = document.getElementById('stressToggle').checked;
+      const result = calculateScenario(stress);
+      if (!result) return;
+
+      lastSnapshot = snapshotInputs();
+
+      lastRunScenarioId = label;
+      if (label === 'A') scenarioAResult = result;
+      if (label === 'B') scenarioBResult = result;
+
+      showScenario(result, label);
+      updateComparison();
+      updateChart();
+    }
+
+    function calculateScenario(useStress) {
+      const messages = [];
+      function num(id) {
+        const v = parseFloat(document.getElementById(id).value);
+        return isNaN(v) ? 0 : v;
+      }
+
+      const clientName = document.getElementById('clientName').value || 'Client';
+      const preparedBy = document.getElementById('preparedBy').value || '';
+      const scenarioLabel = document.getElementById('scenarioLabel').value || '';
+      const scenarioDate = document.getElementById('scenarioDate').value || '';
+      const assumptionsText = document.getElementById('assumptions').value || '';
+
+      let ageCur1 = num('ageCurrent1');
+      let ageRet1 = num('ageRetire1');
+      const ageEnd1 = num('ageEnd1');
+      const alreadyRet1 = document.getElementById('alreadyRetired1').checked;
+      if (alreadyRet1) ageRet1 = ageCur1;
+
+      const includeSpouse = document.getElementById('includeSpouse').checked;
+      let ageCur2 = num('ageCurrent2');
+      let ageRet2 = num('ageRetire2');
+      const ageEnd2 = num('ageEnd2');
+      const alreadyRet2 = document.getElementById('alreadyRetired2').checked;
+      if (alreadyRet2) ageRet2 = ageCur2;
+
+      if (ageCur1 <= 0 || ageEnd1 <= 0) messages.push('Primary ages should be positive numbers.');
+      if (ageEnd1 < ageCur1) messages.push('Primary plan-through age should be after current age.');
+
+      if (includeSpouse) {
+        if (ageCur2 <= 0 || ageEnd2 <= 0) messages.push('Spouse ages should be positive numbers.');
+        if (ageEnd2 < ageCur2) messages.push('Spouse plan-through age should be after current age.');
+      }
+
+      const widowPct = num('widowPercent') / 100;
+      const startBalance = num('startBalance');
+      const contrib1 = num('contrib1');
+      const contrib2 = num('contrib2');
+
+      const inflation = num('inflationRate') / 100;
+      const nomPre = num('nomReturnPre') / 100;
+      const nomPost = num('nomReturnPost') / 100;
+      const stressNomAll = num('stressReturnAll') / 100;
+      const taxRate = num('taxRate') / 100;
+
+      function toReal(nom) {
+        return (1 + nom) / (1 + inflation) - 1;
+      }
+      const realPre = toReal(nomPre);
+      const realPost = toReal(nomPost);
+      const realStress = toReal(stressNomAll);
+
+      const ss1 = num('ss1');
+      const pension1 = num('pension1');
+      const ss2 = num('ss2');
+      const pension2 = num('pension2');
+
+      let ssStartAge1 = num('ssStartAge1');
+      let pensionStartAge1 = num('pensionStartAge1');
+      let ssStartAge2 = num('ssStartAge2');
+      let pensionStartAge2 = num('pensionStartAge2');
+
+      if (!ssStartAge1) ssStartAge1 = ageRet1;
+      if (!pensionStartAge1) pensionStartAge1 = ageRet1;
+      if (!ssStartAge2) ssStartAge2 = ageRet2;
+      if (!pensionStartAge2) pensionStartAge2 = ageRet2;
+
+      const spendBase = num('spendBase');
+      const spendChangeAge = parseFloat(document.getElementById('spendChangeAge').value);
+      const spendLater = num('spendLater');
+
+      if (startBalance < 0) messages.push('Starting balance cannot be negative.');
+      if (nomPre < -0.5 || nomPre > 0.25) messages.push('Nominal return before retirement looks unusual.');
+      if (nomPost < -0.5 || nomPost > 0.25) messages.push('Nominal return in retirement looks unusual.');
+      if (stressNomAll < -0.5 || stressNomAll > 0.25) messages.push('Stress-test nominal return looks unusual.');
+      if (inflation < 0 || inflation > 0.1) messages.push('Inflation rate should typically be between 0% and 10%.');
+      if (taxRate < 0 || taxRate > 0.6) messages.push('Tax rate should be between 0 and 60%.');
+      if (spendBase < 0 || spendLater < 0) messages.push('Spending amounts cannot be negative.');
+      if (ssStartAge1 && ssStartAge1 < ageCur1) messages.push('SS start age (primary) is before current age.');
+      if (includeSpouse && ssStartAge2 && ssStartAge2 < ageCur2) messages.push('SS start age (spouse) is before current age.');
+
+      const validDiv = document.getElementById('validation');
+      if (messages.length > 0) {
+        validDiv.style.display = 'block';
+        validDiv.innerHTML = '<strong>Please review:</strong><ul>' +
+          messages.map(m => '<li>' + m + '</li>').join('') + '</ul>';
+        return null;
+      } else {
+        validDiv.style.display = 'none';
+      }
+
+      const startAge = Math.min(ageCur1, includeSpouse ? ageCur2 : ageCur1);
+      const endAge = includeSpouse ? Math.max(ageEnd1, ageEnd2) : ageEnd1;
+
+      let balance = startBalance;
+      const rows = [];
+      let depletionAge = null;
+
+      for (let i = 0; i <= Math.round((endAge - startAge)); i++) {
+        const yearAge = startAge + i;
+        const primaryAlive = yearAge <= ageEnd1;
+        const spouseAlive = includeSpouse ? yearAge <= ageEnd2 : false;
+
+        const isRetired1 = yearAge >= ageRet1;
+        const isRetired2 = includeSpouse ? yearAge >= ageRet2 : false;
+
+        const anyWorking =
+          (primaryAlive && yearAge < ageRet1) ||
+          (includeSpouse && spouseAlive && yearAge < ageRet2);
+
+        const realReturn = useStress ? realStress : (anyWorking ? realPre : realPost);
+
+        let contribYear = 0;
+        if (!isRetired1 && primaryAlive) contribYear += contrib1;
+        if (includeSpouse && !isRetired2 && spouseAlive) contribYear += contrib2;
+
+        let ssIncome = 0;
+        let pensionIncome = 0;
+        if (primaryAlive && yearAge >= ssStartAge1) ssIncome += ss1;
+        if (primaryAlive && yearAge >= pensionStartAge1) pensionIncome += pension1;
+        if (includeSpouse && spouseAlive && yearAge >= ssStartAge2) ssIncome += ss2;
+        if (includeSpouse && spouseAlive && yearAge >= pensionStartAge2) pensionIncome += pension2;
+
+        let spending = 0;
+        if ((isRetired1 && primaryAlive) || (includeSpouse && isRetired2 && spouseAlive)) {
+          if (!isNaN(spendChangeAge) && yearAge >= spendChangeAge) {
+            spending = spendLater;
+          } else {
+            spending = spendBase;
+          }
+          if (primaryAlive && !spouseAlive || (!primaryAlive && spouseAlive)) {
+            spending = spending * widowPct;
+          }
+        }
+
+        const guaranteed = ssIncome + pensionIncome;
+        let netNeeded = Math.max(spending - guaranteed, 0);
+        let grossWithdrawal = 0;
+        if (netNeeded > 0) {
+          grossWithdrawal = taxRate > 0 ? netNeeded / (1 - taxRate) : netNeeded;
+        }
+
+        balance = balance + contribYear;
+        balance = balance - grossWithdrawal;
+        let depleted = false;
+        if (balance < 0) {
+          balance = 0;
+          depleted = true;
+          if (depletionAge === null) depletionAge = yearAge;
+        }
+        balance = balance * (1 + realReturn);
+
+        rows.push({
+          age: yearAge.toFixed(1),
+          balance: balance,
+          contrib: contribYear,
+          ss: ssIncome,
+          pension: pensionIncome,
+          spending: spending,
+          withdrawal: grossWithdrawal,
+          guaranteed: guaranteed,
+          depleted: depleted
+        });
+      }
+
+      const endBalance = balance;
+      const summary = {
+        clientName,
+        preparedBy,
+        scenarioLabel,
+        scenarioDate,
+        assumptionsText,
+        ageCur1, ageRet1, ageEnd1,
+        includeSpouse,
+        ageCur2, ageRet2, ageEnd2,
+        startBalance,
+        endBalance,
+        depletionAge,
+        inflation,
+        nomPre,
+        nomPost,
+        stressNomAll,
+        taxRate,
+        widowPct,
+        contrib1,
+        contrib2,
+        ss1,
+        ss2,
+        pension1,
+        pension2,
+        ssStartAge1,
+        ssStartAge2,
+        pensionStartAge1,
+        pensionStartAge2,
+        spendBase,
+        spendLater,
+        spendChangeAge,
+        usedStress: useStress
+      };
+      return { rows, summary };
+    }
+
+    function formatCurrency(x) {
+      return '$' + x.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    }
+
+    function showScenario(result, label) {
+      const s = result.summary;
+      const summaryBlock = document.getElementById('summaryBlock');
+      summaryBlock.style.display = 'grid';
+
+      document.getElementById('summaryScenario').textContent =
+        (s.scenarioLabel ? s.scenarioLabel + ' – ' : '') + 'Scenario ' + label;
+
+      document.getElementById('summaryEndBalance').textContent = formatCurrency(s.endBalance);
+
+      const pill = document.getElementById('summaryDepletion');
+      if (s.depletionAge === null) {
+        pill.textContent = 'No depletion within plan horizon';
+        pill.className = 'summary-pill pill-ok';
+      } else {
+        pill.textContent = 'Depletes at age ~' + s.depletionAge.toFixed(1);
+        pill.className = 'summary-pill pill-risk';
+      }
+
+      let retireText = 'Primary ' + s.ageRet1.toFixed(1);
+      if (s.includeSpouse) {
+        retireText += ' • Spouse ' + s.ageRet2.toFixed(1);
+      }
+      document.getElementById('summaryRetireAges').textContent = retireText;
+
+      const textDiv = document.getElementById('scenarioText');
+      textDiv.style.display = 'block';
+
+      const bullets = [];
+
+      bullets.push('<li><strong>Client:</strong> ' + s.clientName +
+        (s.preparedBy ? ' (Prepared by ' + s.preparedBy + ')' : '') +
+        (s.scenarioDate ? ' – ' + s.scenarioDate : '') + '</li>');
+
+      bullets.push('<li><strong>Ages & timing:</strong> Primary ' + s.ageCur1.toFixed(1) +
+        ' now, retires at ' + s.ageRet1.toFixed(1) +
+        ', plan through ' + s.ageEnd1.toFixed(1) +
+        (s.includeSpouse ? '; Spouse ' + s.ageCur2.toFixed(1) +
+          ' now, retires at ' + s.ageRet2.toFixed(1) +
+          ', plan through ' + s.ageEnd2.toFixed(1) : '') +
+        '.</li>');
+
+      bullets.push('<li><strong>Returns & inflation:</strong> Nominal ' +
+        (s.nomPre * 100).toFixed(1) + '% pre-retirement, ' +
+        (s.nomPost * 100).toFixed(1) + '% in retirement, inflation ' +
+        (s.inflation * 100).toFixed(1) + '%; ' +
+        'stress-test nominal ' + (s.stressNomAll * 100).toFixed(1) + '% ' +
+        (s.usedStress ? '(stress test ON for this run).' : '(available via toggle, not used in this run).') +
+        '</li>');
+
+      bullets.push('<li><strong>Contributions:</strong> Primary ' + formatCurrency(s.contrib1) +
+        '/yr, Spouse ' + formatCurrency(s.contrib2) + '/yr (while working).</li>');
+
+      bullets.push('<li><strong>Guaranteed income:</strong> Primary SS ' + formatCurrency(s.ss1) +
+        ' starting age ' + s.ssStartAge1.toFixed(1) +
+        (s.pension1 > 0 ? ', pension ' + formatCurrency(s.pension1) +
+          ' starting age ' + s.pensionStartAge1.toFixed(1) : '') +
+        (s.includeSpouse ? '; Spouse SS ' + formatCurrency(s.ss2) +
+          ' starting age ' + s.ssStartAge2.toFixed(1) +
+          (s.pension2 > 0 ? ', pension ' + formatCurrency(s.pension2) +
+            ' starting age ' + s.pensionStartAge2.toFixed(1) : '') : '') +
+        '.</li>');
+
+      bullets.push('<li><strong>Spending pattern:</strong> Base retirement spending ' +
+        formatCurrency(s.spendBase) +
+        (s.spendChangeAge ? ' until age ' + s.spendChangeAge.toFixed(1) +
+          ', then ' + formatCurrency(s.spendLater) + ' thereafter' : '') +
+        '; survivor spends ' + (s.widowPct * 100).toFixed(0) + '% of joint spending after first death.</li>');
+
+      bullets.push('<li><strong>Tax assumption:</strong> Effective tax rate ' +
+        (s.taxRate * 100).toFixed(1) + '% on withdrawals used to fund spending.</li>');
+
+      if (s.assumptionsText && s.assumptionsText.trim().length > 0) {
+        bullets.push('<li><strong>Advisor notes / assumptions:</strong> ' +
+          s.assumptionsText.replace(/\n/g, ' ') + '</li>');
+      }
+
+      const narrative = [];
+      narrative.push('<strong>Narrative for Scenario ' + label + ':</strong>');
+      narrative.push('<p>' + s.clientName + ' retires at age ' + s.ageRet1.toFixed(1) +
+        (s.includeSpouse ? ' with spouse retiring at age ' + s.ageRet2.toFixed(1) : '') +
+        '. The household begins with ' + formatCurrency(s.startBalance) +
+        ' in investable assets. Based on the inputs below, the portfolio ' +
+        (s.depletionAge === null
+          ? 'does not fully deplete within the planned horizon.'
+          : 'is projected to deplete around age ' + s.depletionAge.toFixed(1) + '.') +
+        '</p>');
+      narrative.push('<ul>' + bullets.join('') + '</ul>');
+
+      textDiv.innerHTML = narrative.join('');
+      renderTable(result.rows);
+    }
+
+    function renderTable(rows) {
+      const div = document.getElementById('tableContainer');
+      let html = '<table><thead><tr>' +
+        '<th>Age</th>' +
+        '<th>Balance (end of yr)</th>' +
+        '<th>Contributions</th>' +
+        '<th>Guaranteed income</th>' +
+        '<th>Portfolio withdrawals (gross)</th>' +
+        '<th>Retirement spending</th>' +
+        '</tr></thead><tbody>';
+      rows.forEach(r => {
+        html += '<tr' + (r.depleted ? ' class="depleted-row"' : '') + '>' +
+          '<td>' + r.age + '</td>' +
+          '<td>' + formatCurrency(r.balance) + '</td>' +
+          '<td>' + formatCurrency(r.contrib) + '</td>' +
+          '<td>' + formatCurrency(r.guaranteed) + '</td>' +
+          '<td>' + formatCurrency(r.withdrawal) + '</td>' +
+          '<td>' + formatCurrency(r.spending) + '</td>' +
+          '</tr>';
+      });
+      html += '</tbody></table>';
+      div.innerHTML = html;
+    }
+
+    function updateComparison() {
+      const block = document.getElementById('comparisonBlock');
+      if (!scenarioAResult || !scenarioBResult) {
+        block.style.display = 'none';
+        return;
+      }
+      block.style.display = 'block';
+      const a = scenarioAResult.summary;
+      const b = scenarioBResult.summary;
+      document.getElementById('compareA').innerHTML =
+        '<p><strong>End balance:</strong> ' + formatCurrency(a.endBalance) + '<br />' +
+        '<strong>Depletion:</strong> ' + (a.depletionAge === null ? 'No depletion' : 'Age ~' + a.depletionAge.toFixed(1)) + '<br />' +
+        '<strong>Retire ages:</strong> ' + a.ageRet1.toFixed(1) +
+        (a.includeSpouse ? ' / ' + a.ageRet2.toFixed(1) : '') + '</p>';
+      document.getElementById('compareB').innerHTML =
+        '<p><strong>End balance:</strong> ' + formatCurrency(b.endBalance) + '<br />' +
+        '<strong>Depletion:</strong> ' + (b.depletionAge === null ? 'No depletion' : 'Age ~' + b.depletionAge.toFixed(1)) + '<br />' +
+        '<strong>Retire ages:</strong> ' + b.ageRet1.toFixed(1) +
+        (b.includeSpouse ? ' / ' + b.ageRet2.toFixed(1) : '') + '</p>';
+    }
+
+    function updateChart() {
+      if (!scenarioAResult && !scenarioBResult) return;
+      const container = document.getElementById('chartContainer');
+      container.style.display = 'block';
+
+      const labels = [];
+      const dataA = [];
+      const dataB = [];
+
+      if (scenarioAResult) {
+        scenarioAResult.rows.forEach(r => {
+          labels.push(r.age);
+          dataA.push(r.balance);
+        });
+      }
+      if (scenarioBResult) {
+        scenarioBResult.rows.forEach((r, idx) => {
+          if (labels[idx] == null) labels[idx] = r.age;
+          dataB.push(r.balance);
+        });
+      }
+
+      const ctx = document.getElementById('chartCanvas').getContext('2d');
+      if (chartInstance) chartInstance.destroy();
+      chartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            scenarioAResult ? {
+              label: 'Scenario A',
+              data: dataA,
+            } : null,
+            scenarioBResult ? {
+              label: 'Scenario B',
+              data: dataB,
+            } : null
+          ].filter(Boolean)
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { labels: { font: { size: 11 } } }
+          },
+          scales: {
+            y: {
+              ticks: {
+                callback: function(value) { return '$' + (value / 1000000).toFixed(1) + 'M'; },
+                font: { size: 10 }
+              }
+            },
+            x: {
+              ticks: { maxTicksLimit: 10, font: { size: 10 } }
+            }
+          }
+        }
+      });
+    }
+
+    function printResults() {
+      window.print();
+    }
+
+    function downloadCSV() {
+      const res = lastRunScenarioId === 'B' ? scenarioBResult : scenarioAResult;
+      if (!res) {
+        alert('Run at least one scenario first.');
+        return;
+      }
+      const rows = res.rows;
+      let csv = 'Age,Balance,Contributions,GuaranteedIncome,Withdrawals,Spending\n';
+      rows.forEach(r => {
+        csv += [
+          r.age,
+          r.balance.toFixed(2),
+          r.contrib.toFixed(2),
+          r.guaranteed.toFixed(2),
+          r.withdrawal.toFixed(2),
+          r.spending.toFixed(2)
+        ].join(',') + '\n';
+      });
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'retirement_plan_scenario_' + (lastRunScenarioId || 'A') + '.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  </script>
+</body>
+</html>
